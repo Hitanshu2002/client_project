@@ -2,9 +2,11 @@ const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 const path = require('path');
 
-const prisma = new PrismaClient({
-  datasources: { db: { url: `file:${path.resolve(__dirname, '../../frontend/prisma/dev.db')}` } },
-});
+const configuredDatabaseUrl = process.env.DATABASE_URL;
+const databaseUrl = configuredDatabaseUrl?.startsWith('file:') && path.isAbsolute(configuredDatabaseUrl.slice(5))
+  ? configuredDatabaseUrl
+  : `file:${path.resolve(__dirname, '../../frontend/prisma/dev.db')}`;
+const prisma = new PrismaClient({ datasources: { db: { url: databaseUrl } } });
 
 async function main() {
   console.log('🌱 Seeding House of Ramyaa database...');

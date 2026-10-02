@@ -17,11 +17,15 @@ import uploadRoutes from './routes/upload';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+const uploadDir = process.env.UPLOAD_DIR
+  ? path.resolve(process.cwd(), process.env.UPLOAD_DIR)
+  : path.resolve(__dirname, '../../frontend/public/uploads');
 
 // CORS setup
 app.use(
   cors({
-    origin: 'http://localhost:3000',
+    origin: frontendUrl.split(',').map((origin) => origin.trim()),
     credentials: true,
   })
 );
@@ -31,7 +35,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Static uploads serving
-app.use('/uploads', express.static(path.join(process.cwd(), 'public', 'uploads')));
+app.use('/uploads', express.static(uploadDir));
 
 // Routes under /api
 app.use('/api/auth', authRoutes);

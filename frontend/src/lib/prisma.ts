@@ -2,9 +2,12 @@ import path from 'path';
 import { PrismaClient } from '@prisma/client';
 
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
-const databaseUrl = process.env.DATABASE_URL?.startsWith('file:')
-  ? `file:${path.resolve(process.cwd(), 'prisma', 'dev.db')}`
-  : process.env.DATABASE_URL;
+const configuredDatabaseUrl = process.env.DATABASE_URL;
+const databaseUrl = configuredDatabaseUrl?.startsWith('file:')
+  ? path.isAbsolute(configuredDatabaseUrl.slice(5))
+    ? configuredDatabaseUrl
+    : `file:${path.resolve(process.cwd(), 'prisma', 'dev.db')}`
+  : configuredDatabaseUrl;
 
 export const prisma =
   globalForPrisma.prisma ||

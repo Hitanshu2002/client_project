@@ -7,7 +7,9 @@ import { getAuthTokenFromRequest, verifyToken } from '../lib/auth';
 
 const router = Router();
 
-const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+const uploadDir = process.env.UPLOAD_DIR
+  ? path.resolve(process.cwd(), process.env.UPLOAD_DIR)
+  : path.resolve(__dirname, '../../../frontend/public/uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }

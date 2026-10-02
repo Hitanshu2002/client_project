@@ -21,7 +21,9 @@ export async function POST(req: NextRequest) {
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
     const maxSize = 5 * 1024 * 1024; // 5MB
 
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+    const uploadDir = process.env.UPLOAD_DIR
+      ? path.resolve(process.cwd(), process.env.UPLOAD_DIR)
+      : path.join(process.cwd(), 'public', 'uploads');
     await mkdir(uploadDir, { recursive: true });
 
     const urls: string[] = [];
