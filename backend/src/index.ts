@@ -14,13 +14,14 @@ import promotionRoutes from './routes/promotions';
 import reviewRoutes from './routes/reviews';
 import adminRoutes from './routes/admin';
 import uploadRoutes from './routes/upload';
+import { ensureAdminAccount } from './lib/admin';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
 const uploadDir = process.env.UPLOAD_DIR
   ? path.resolve(process.cwd(), process.env.UPLOAD_DIR)
-  : path.resolve(__dirname, '../../frontend/public/uploads');
+  : path.resolve(process.cwd(), 'public/uploads');
 
 // CORS setup
 app.use(
@@ -52,6 +53,13 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 House of Ramyaa Express Backend listening on http://localhost:${PORT}`);
-});
+ensureAdminAccount()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`🚀 House of Ramyaa Express Backend listening on http://localhost:${PORT}`);
+    });
+  })
+  .catch((error) => {
+    console.error('Unable to prepare the admin account:', error);
+    process.exit(1);
+  });

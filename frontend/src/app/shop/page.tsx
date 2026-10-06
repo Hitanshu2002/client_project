@@ -1,5 +1,6 @@
 import React from 'react';
-import { prisma } from '@/lib/prisma';
+import { serverApiFetch } from '@/lib/server-api';
+import { Product } from '@/types';
 import { ProductCard } from '@/components/product/ProductCard';
 import { SlidersHorizontal } from 'lucide-react';
 import Link from 'next/link';
@@ -12,31 +13,9 @@ interface ShopPageProps {
 
 export default async function ShopPage({ searchParams }: ShopPageProps) {
   const sort = searchParams.sort;
-  const orderBy =
-    sort === 'price-asc'
-      ? { sellingPrice: 'asc' as const }
-      : sort === 'price-desc'
-        ? { sellingPrice: 'desc' as const }
-        : { createdAt: 'desc' as const };
-
-  const productsData = await prisma.product.findMany({
-    orderBy,
-    include: {
-      category: true,
-      images: { orderBy: { order: 'asc' } },
-      variants: true,
-      reviews: { select: { rating: true } },
-    },
-  });
-
-  const products = productsData.map((product) => ({
-    ...product,
-    avgRating:
-      product.reviews.length > 0
-        ? Math.round((product.reviews.reduce((sum, review) => sum + review.rating, 0) / product.reviews.length) * 10) / 10
-        : undefined,
-    reviewCount: product.reviews.length,
-  }));
+  const response = await serverApiFetch(`/products${sort ? `?sort=${sort}` : ''}`);
+  const data = await response.json();
+  const products: Product[] = data.products || [];
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">

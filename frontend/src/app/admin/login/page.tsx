@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import { Lock, AlertCircle } from 'lucide-react';
+import { ForgotPasswordForm } from '@/components/auth/ForgotPasswordForm';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -13,6 +14,7 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,13 +22,29 @@ export default function AdminLoginPage() {
     setIsSubmitting(true);
 
     const res = await login(email, password);
-    if (res.success) {
-      router.push('/admin');
+    if (res.success && res.user?.role === 'ADMIN') {
+      router.push('/');
+    } else if (res.success) {
+      setErrorMsg('This account does not have administrator access.');
     } else {
       setErrorMsg(res.error || 'Admin authentication failed');
     }
     setIsSubmitting(false);
   };
+
+  if (isForgotPassword) {
+    return (
+      <div className="min-h-screen bg-ramyaa-charcoal flex flex-col justify-center items-center px-4">
+        <div className="w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl">
+          <ForgotPasswordForm
+            adminOnly
+            onBack={() => setIsForgotPassword(false)}
+            onSuccess={() => setIsForgotPassword(false)}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-ramyaa-charcoal flex flex-col justify-center items-center px-4">
@@ -53,7 +71,7 @@ export default function AdminLoginPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4">
           <div>
             <label className="block text-xs font-bold text-gray-700 mb-1">Admin Email</label>
             <input
@@ -62,6 +80,7 @@ export default function AdminLoginPage() {
               placeholder="admin@houseoframyaa.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              autoComplete="off"
               className="w-full rounded-xl border border-gray-200 p-3 text-xs focus:ring-2 focus:ring-ramyaa-pink focus:outline-none"
             />
           </div>
@@ -74,6 +93,7 @@ export default function AdminLoginPage() {
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              autoComplete="new-password"
               className="w-full rounded-xl border border-gray-200 p-3 text-xs focus:ring-2 focus:ring-ramyaa-pink focus:outline-none"
             />
           </div>
@@ -85,10 +105,13 @@ export default function AdminLoginPage() {
           >
             {isSubmitting ? 'Verifying Admin Credentials...' : 'Sign In to Admin Portal'}
           </button>
+          <button type="button" onClick={() => setIsForgotPassword(true)} className="w-full text-xs font-semibold text-ramyaa-pink hover:underline">
+            Forgot admin password?
+          </button>
         </form>
 
         <div className="pt-2 text-center text-[11px] text-gray-400">
-          Default Credentials: <span className="font-mono text-ramyaa-blue font-bold">admin@houseoframyaa.com</span> / <span className="font-mono text-ramyaa-blue font-bold">Admin@123456</span>
+          Only the authorized House of Ramyaa administrator can access this portal.
         </div>
       </div>
     </div>

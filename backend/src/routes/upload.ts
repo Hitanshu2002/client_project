@@ -9,7 +9,7 @@ const router = Router();
 
 const uploadDir = process.env.UPLOAD_DIR
   ? path.resolve(process.cwd(), process.env.UPLOAD_DIR)
-  : path.resolve(__dirname, '../../../frontend/public/uploads');
+  : path.resolve(process.cwd(), 'public/uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }

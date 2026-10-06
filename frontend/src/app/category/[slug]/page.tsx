@@ -1,6 +1,7 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
-import { prisma } from '@/lib/prisma';
+import { serverApiFetch } from '@/lib/server-api';
+import { Category, Product } from '@/types';
 import { ProductCard } from '@/components/product/ProductCard';
 import Link from 'next/link';
 import { Filter, SlidersHorizontal } from 'lucide-react';
@@ -13,7 +14,9 @@ interface CategoryPageProps {
 }
 
 export async function generateMetadata({ params }: CategoryPageProps) {
-  const category = await prisma.category.findUnique({ where: { slug: params.slug } });
+  const response = await serverApiFetch(`/categories/${params.slug}`);
+  const data = response.ok ? await response.json() : { category: null };
+  const category = data.category;
   if (!category) return { title: 'Category Not Found' };
   return {
     title: `${category.name} Collection | House of Ramyaa`,
@@ -22,11 +25,12 @@ export async function generateMetadata({ params }: CategoryPageProps) {
 }
 
 export default async function CategoryPage({ params, searchParams }: CategoryPageProps) {
-  const category = await prisma.category.findUnique({
-    where: { slug: params.slug },
-  });
   const isNewCollection = params.slug === 'new-collection';
   const isFestiveCollection = params.slug === 'festive-collection';
+
+  const categoryResponse = await serverApiFetch(`/categories/${params.slug}`);
+  const categoryData = categoryResponse.ok ? await categoryResponse.json() : { category: null };
+  const category = categoryData.category;
 
   if (!category && !isFestiveCollection) {
     notFound();
@@ -34,51 +38,23 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
 
   const { sort, size, color, inStock } = searchParams;
 
-  const where: any = isNewCollection
-    ? { isNewArrival: true }
-    : category
-      ? { categoryId: category.id }
-      : { OR: [{ isFestive: true }, { isBestSeller: true }] };
+  const productParams = new URLSearchParams();
+  if (isNewCollection) productParams.set('isNewArrival', 'true');
+  else if (isFestiveCollection) productParams.set('sale', 'true');
+  else productParams.set('category', params.slug);
+  if (sort) productParams.set('sort', sort);
+  if (size) productParams.set('size', size);
+  if (color) productParams.set('color', color);
+  if (inStock === 'true') productParams.set('inStock', 'true');
 
-  if (inStock === 'true') {
-    where.inStock = true;
-  }
-
-  if (size || color) {
-    where.variants = {
-      some: {
-        ...(size ? { size } : {}),
-        ...(color ? { color } : {}),
-        stock: { gt: 0 },
-      },
-    };
-  }
-
-  let orderBy: any = { createdAt: 'desc' };
-  if (sort === 'price-asc') orderBy = { sellingPrice: 'asc' };
-  if (sort === 'price-desc') orderBy = { sellingPrice: 'desc' };
-
-  const productsData = await prisma.product.findMany({
-    where,
-    orderBy,
-    include: {
-      category: true,
-      images: { orderBy: { order: 'asc' } },
-      variants: true,
-      reviews: { select: { rating: true } },
-    },
-  });
-
-  const products = productsData.map((p) => ({
-    ...p,
-    avgRating:
-      p.reviews.length > 0
-        ? Math.round((p.reviews.reduce((acc, r) => acc + r.rating, 0) / p.reviews.length) * 10) / 10
-        : undefined,
-    reviewCount: p.reviews.length,
-  }));
-
-  const allCategories = await prisma.category.findMany({ orderBy: { name: 'asc' } });
+  const [productsResponse, categoriesResponse] = await Promise.all([
+    serverApiFetch(`/products?${productParams.toString()}`),
+    serverApiFetch('/categories'),
+  ]);
+  const productsData = await productsResponse.json();
+  const categoriesData = await categoriesResponse.json();
+  const products: Product[] = productsData.products || [];
+  const allCategories: Category[] = categoriesData.categories || [];
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-8">

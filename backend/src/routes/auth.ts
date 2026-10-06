@@ -9,6 +9,7 @@ import {
   TOKEN_NAME,
 } from '../lib/auth';
 import { sendOtpEmail } from '../lib/email';
+import { ADMIN_EMAIL } from '../lib/admin';
 
 const router = Router();
 
@@ -26,6 +27,10 @@ router.post('/login', async (req: Request, res: Response) => {
     });
 
     if (!user) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    if (user.role === 'ADMIN' && user.email !== ADMIN_EMAIL) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
@@ -77,6 +82,10 @@ router.post('/register', async (req: Request, res: Response) => {
     }
 
     const cleanEmail = email.toLowerCase().trim();
+
+    if (cleanEmail === ADMIN_EMAIL) {
+      return res.status(400).json({ error: 'This email is reserved for the administrator. Use the admin login.' });
+    }
 
     const existingUser = await prisma.user.findUnique({
       where: { email: cleanEmail },
@@ -207,6 +216,72 @@ router.post('/send-otp', async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('Send OTP Error:', error);
     return res.status(500).json({ error: 'Failed to send verification code' });
+  }
+});
+
+// POST /api/auth/forgot-password
+router.post('/forgot-password', async (req: Request, res: Response) => {
+  try {
+    const cleanEmail = String(req.body.email || '').toLowerCase().trim();
+    if (!cleanEmail) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { email: cleanEmail } });
+    if (!user) {
+      return res.json({ message: 'If an account exists, a password reset code has been sent.' });
+    }
+
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    await prisma.otpVerification.upsert({
+      where: { email: cleanEmail },
+      update: { code, expiresAt },
+      create: { email: cleanEmail, code, expiresAt },
+    });
+
+    await sendOtpEmail(cleanEmail, code, 'password reset');
+    return res.json({ message: 'If an account exists, a password reset code has been sent.' });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    return res.status(500).json({ error: 'Unable to send the password reset code' });
+  }
+});
+
+// POST /api/auth/reset-password
+router.post('/reset-password', async (req: Request, res: Response) => {
+  try {
+    const cleanEmail = String(req.body.email || '').toLowerCase().trim();
+    const code = String(req.body.code || '').trim();
+    const password = String(req.body.password || '');
+
+    if (!cleanEmail || !code || !password) {
+      return res.status(400).json({ error: 'Email, verification code, and new password are required' });
+    }
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'New password must be at least 8 characters' });
+    }
+
+    const record = await prisma.otpVerification.findUnique({ where: { email: cleanEmail } });
+    if (!record || record.expiresAt < new Date() || record.code !== code) {
+      return res.status(400).json({ error: 'Invalid or expired password reset code' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { email: cleanEmail } });
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid or expired password reset code' });
+    }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash: await hashPassword(password) },
+    });
+    await prisma.otpVerification.delete({ where: { email: cleanEmail } });
+
+    return res.json({ message: 'Password changed successfully. You can now sign in.' });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    return res.status(500).json({ error: 'Unable to reset the password' });
   }
 });
 

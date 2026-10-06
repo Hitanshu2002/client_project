@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { X, Trash2, ShoppingBag, ArrowRight } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { formatPrice } from '@/lib/utils';
+import { getImageUrl } from '@/lib/api';
 
 export const CartDrawer: React.FC = () => {
   const {
@@ -90,7 +91,7 @@ export const CartDrawer: React.FC = () => {
               cart.map((item) => {
                 const primaryImage =
                   item.product.images && item.product.images.length > 0
-                    ? item.product.images[0].url
+                      ? getImageUrl(item.product.images[0].url)
                     : 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=800&auto=format&fit=crop';
 
                 return (

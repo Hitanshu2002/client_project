@@ -29,15 +29,15 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="min-w-0 max-w-full space-y-8 overflow-x-hidden">
       {/* Dashboard Title */}
       <div>
-        <h1 className="font-serif text-3xl font-bold text-ramyaa-charcoal">Admin Dashboard Overview</h1>
-        <p className="text-xs text-gray-500 mt-1">Real-time catalog metrics, registered users, orders & UPI payment verification status</p>
+        <h1 className="font-serif text-2xl font-bold text-ramyaa-charcoal sm:text-3xl">Admin Dashboard Overview</h1>
+        <p className="mt-1 max-w-3xl break-words text-xs text-gray-500">Real-time catalog metrics, registered users, orders &amp; UPI payment verification status</p>
       </div>
 
       {/* KPI Cards Grid - Includes Registered Users */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 gap-4 min-[420px]:grid-cols-2 lg:grid-cols-6">
         {/* Total Products */}
         <div className="rounded-3xl bg-white p-5 border border-gray-100 shadow-sm flex items-center justify-between">
           <div>
@@ -106,7 +106,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Recent Orders Section */}
-      <div className="rounded-3xl bg-white p-6 border border-gray-100 shadow-sm space-y-4">
+      <div className="min-w-0 space-y-4 rounded-3xl border border-gray-100 bg-white p-4 shadow-sm sm:p-6">
         <div className="flex items-center justify-between border-b pb-4">
           <div>
             <h2 className="font-serif text-xl font-bold text-ramyaa-charcoal">Recent Orders</h2>
@@ -121,8 +121,8 @@ export default function AdminDashboardPage() {
           </Link>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-gray-700">
+        <div className="max-w-full overflow-x-auto">
+          <table className="min-w-[680px] w-full text-left text-xs text-gray-700">
             <thead className="bg-gray-50 text-[10px] uppercase font-bold text-gray-500 tracking-wider">
               <tr>
                 <th className="p-3">Order Number</th>

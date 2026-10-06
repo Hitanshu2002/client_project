@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { ProductImage } from '@/types';
+import { getImageUrl } from '@/lib/api';
 import { ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
 
 interface ProductGalleryProps {
@@ -34,7 +35,7 @@ export const ProductGallery: React.FC<ProductGalleryProps> = ({ images, productN
       {/* Main Image Display */}
       <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-gray-100 border border-gray-100 shadow-card">
         <Image
-          src={currentImage.url}
+          src={getImageUrl(currentImage.url)}
           alt={`${productName} image ${selectedIndex + 1}`}
           fill
           priority
@@ -85,7 +86,7 @@ export const ProductGallery: React.FC<ProductGalleryProps> = ({ images, productN
                   : 'border-transparent opacity-70 hover:opacity-100'
               }`}
             >
-              <Image src={img.url} alt={`Thumbnail ${idx + 1}`} fill className="object-cover" />
+              <Image src={getImageUrl(img.url)} alt={`Thumbnail ${idx + 1}`} fill className="object-cover" />
             </button>
           ))}
         </div>

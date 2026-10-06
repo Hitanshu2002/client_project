@@ -9,6 +9,7 @@
     "start": "node dist/index.js",
     "db:push": "prisma db push",
     "db:seed": "node scripts/seed.js",
+    "repair:media": "node scripts/repair-media.js",
     "postinstall": "prisma generate"
   },
   "prisma": {

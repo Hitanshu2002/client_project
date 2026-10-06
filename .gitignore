@@ -16,7 +16,8 @@ dist/
 frontend/.env.production
 backend/.env.production
 !.env.example
-**/.env.example
+!frontend/.env.example
+!backend/.env.example
 
 # Local SQLite databases and runtime files
 *.db

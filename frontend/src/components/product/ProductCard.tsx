@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Product } from '@/types';
 import { formatPrice } from '@/lib/utils';
+import { getImageUrl } from '@/lib/api';
 import { Star, ShoppingBag } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 
@@ -45,7 +46,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         onMouseLeave={() => setIsHovered(false)}
       >
         <Image
-          src={isHovered ? secondaryImage : primaryImage}
+          src={getImageUrl(isHovered ? secondaryImage : primaryImage)}
           alt={product.name}
           fill
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"

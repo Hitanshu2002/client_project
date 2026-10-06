@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Promotion } from '@/types';
 import { Sparkles, ArrowRight } from 'lucide-react';
-import { apiFetch } from '@/lib/api';
+import { apiFetch, getImageUrl } from '@/lib/api';
 
 export const PromoBanner: React.FC = () => {
   const [promotion, setPromotion] = useState<Promotion | null>(null);
@@ -29,7 +29,7 @@ export const PromoBanner: React.FC = () => {
       {promotion.bannerImage && (
         <div className="absolute inset-0 opacity-20 mix-blend-overlay">
           <Image
-            src={promotion.bannerImage}
+            src={getImageUrl(promotion.bannerImage)}
             alt={promotion.title}
             fill
             className="object-cover"
