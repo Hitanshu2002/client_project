@@ -1,5 +1,6 @@
 import React from 'react';
-import { prisma } from '@/lib/prisma';
+import { serverApiFetch } from '@/lib/server-api';
+import { Product } from '@/types';
 import { ProductCard } from '@/components/product/ProductCard';
 import { Search } from 'lucide-react';
 
@@ -12,35 +13,11 @@ interface SearchPageProps {
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const query = searchParams.q || '';
 
-  let products: any[] = [];
-  if (query.trim()) {
-    const rawProducts = await prisma.product.findMany({
-      where: {
-        OR: [
-          { name: { contains: query } },
-          { description: { contains: query } },
-          { category: { name: { contains: query } } },
-          { fabric: { contains: query } },
-        ],
-      },
-      include: {
-        category: true,
-        images: { orderBy: { order: 'asc' } },
-        variants: true,
-        reviews: { select: { rating: true } },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-
-    products = rawProducts.map((p) => ({
-      ...p,
-      avgRating:
-        p.reviews.length > 0
-          ? Math.round((p.reviews.reduce((acc, r) => acc + r.rating, 0) / p.reviews.length) * 10) / 10
-          : undefined,
-      reviewCount: p.reviews.length,
-    }));
-  }
+  const response = query.trim()
+    ? await serverApiFetch(`/products?q=${encodeURIComponent(query)}&sort=newest`)
+    : null;
+  const data = response ? await response.json() : { products: [] };
+  const products: Product[] = data.products || [];
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 space-y-8">

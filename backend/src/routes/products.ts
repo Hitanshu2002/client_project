@@ -12,6 +12,9 @@ router.get('/', async (req: Request, res: Response) => {
     const search = req.query.q as string | undefined;
     const isNewArrival = req.query.isNewArrival as string | undefined;
     const isBestSeller = req.query.isBestSeller as string | undefined;
+    const isFestive = req.query.isFestive as string | undefined;
+    const sale = req.query.sale as string | undefined;
+    const inStock = req.query.inStock as string | undefined;
     const sort = req.query.sort as string | undefined;
     const size = req.query.size as string | undefined;
     const color = req.query.color as string | undefined;
@@ -28,6 +31,18 @@ router.get('/', async (req: Request, res: Response) => {
 
     if (isBestSeller === 'true') {
       where.isBestSeller = true;
+    }
+
+    if (isFestive === 'true') {
+      where.isFestive = true;
+    }
+
+    if (sale === 'true') {
+      where.OR = [{ isFestive: true }, { isBestSeller: true }];
+    }
+
+    if (inStock === 'true') {
+      where.inStock = true;
     }
 
     if (search) {

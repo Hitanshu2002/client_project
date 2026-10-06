@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
@@ -35,6 +35,15 @@ export const AdminSidebar: React.FC = () => {
   const pathname = usePathname();
   const { logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isOpen]);
 
   const sidebarContent = (
     <div className="flex flex-col justify-between h-full space-y-6">
@@ -124,7 +133,7 @@ export const AdminSidebar: React.FC = () => {
       {isOpen && (
         <div className="lg:hidden fixed inset-0 z-50 flex">
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsOpen(false)} />
-          <aside className="relative w-72 bg-ramyaa-charcoal text-white p-6 h-full z-10 overflow-y-auto">
+          <aside className="relative w-72 max-h-screen bg-ramyaa-charcoal text-white p-6 h-full z-10 overflow-y-auto overscroll-contain">
             {sidebarContent}
           </aside>
         </div>

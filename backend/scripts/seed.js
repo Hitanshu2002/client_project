@@ -1,11 +1,12 @@
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 const configuredDatabaseUrl = process.env.DATABASE_URL;
 const databaseUrl = configuredDatabaseUrl?.startsWith('file:') && path.isAbsolute(configuredDatabaseUrl.slice(5))
   ? configuredDatabaseUrl
-  : `file:${path.resolve(__dirname, '../../frontend/prisma/dev.db')}`;
+  : `file:${path.resolve(process.cwd(), configuredDatabaseUrl?.slice(5) || 'prisma/dev.db')}`;
 const prisma = new PrismaClient({ datasources: { db: { url: databaseUrl } } });
 
 async function main() {
@@ -23,29 +24,18 @@ async function main() {
   await prisma.user.deleteMany();
 
   // Create Users
-  const adminPassword = await bcrypt.hash('admin123', 10);
+  const adminPassword = await bcrypt.hash(process.env.ADMIN_TEMP_PASSWORD || 'Admin@123456', 10);
   const admin = await prisma.user.create({
     data: {
-      name: 'Ramyaa Admin',
-      email: 'admin@ramyaa.com',
+      name: 'House of Ramyaa Admin',
+      email: (process.env.ADMIN_EMAIL || 'houseoframyaa@gmail.com').toLowerCase(),
       passwordHash: adminPassword,
       role: 'ADMIN',
       phone: '+91 98290 12345',
     },
   });
 
-  const customerPassword = await bcrypt.hash('customer123', 10);
-  const customer = await prisma.user.create({
-    data: {
-      name: 'Ananya Sharma',
-      email: 'customer@ramyaa.com',
-      passwordHash: customerPassword,
-      role: 'CUSTOMER',
-      phone: '+91 98765 43210',
-    },
-  });
-
-  console.log('✅ Admin & Customer accounts created');
+  console.log('✅ Admin account created');
 
   // Categories
   const categoriesData = [
@@ -77,7 +67,7 @@ async function main() {
       name: 'Kota Doria',
       slug: 'kota-doria',
       description: 'Lightweight woven square check fabric known for crisp elegance',
-      image: 'https://images.unsplash.com/photo-1583391733975-2313a4049a3a?q=80&w=800&auto=format&fit=crop',
+      image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=800&auto=format&fit=crop',
     },
     {
       name: 'Rajasthani Suits',
@@ -235,7 +225,7 @@ async function main() {
       fabric: 'Pure Kota Doria Cotton Silk',
       careInstructions: 'Dry Clean Only',
       images: [
-        'https://images.unsplash.com/photo-1583391733975-2313a4049a3a?q=80&w=1000&auto=format&fit=crop',
+        'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=1000&auto=format&fit=crop',
         'https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=1000&auto=format&fit=crop',
       ],
       variants: [

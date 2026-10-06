@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Product, ProductVariant } from '@/types';
 import { Save, AlertTriangle, CheckCircle2 } from 'lucide-react';
-import { apiFetch } from '@/lib/api';
+import { apiFetch, getImageUrl } from '@/lib/api';
 
 export default function AdminStockPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -47,7 +47,7 @@ export default function AdminStockPage() {
     setSuccessMsg('');
 
     try {
-      const res = await fetch(`/api/products/${product.id}`, {
+      const res = await apiFetch(`/products/${product.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -107,7 +107,7 @@ export default function AdminStockPage() {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4">
                   <div className="flex items-center space-x-3">
                     <div className="relative h-12 w-10 rounded-lg overflow-hidden bg-gray-100">
-                      <Image src={primaryImage} alt={product.name} fill className="object-cover" />
+                      <Image src={getImageUrl(primaryImage)} alt={product.name} fill className="object-cover" />
                     </div>
                     <div>
                       <h3 className="font-serif text-base font-bold text-ramyaa-charcoal">

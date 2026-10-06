@@ -1,7 +1,9 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { prisma } from '@/lib/prisma';
+import { serverApiFetch } from '@/lib/server-api';
+import { getImageUrl } from '@/lib/api';
+import { Category, Product } from '@/types';
 import { HeroBanner } from '@/components/home/HeroBanner';
 import { PromoBanner } from '@/components/home/PromoBanner';
 import { ProductCard } from '@/components/product/ProductCard';
@@ -10,49 +12,17 @@ import { ArrowRight, Sparkles, Star, Quote } from 'lucide-react';
 export const revalidate = 60;
 
 export default async function HomePage() {
-  // Fetch Categories
-  const categories = await prisma.category.findMany({
-    take: 8,
-    orderBy: { name: 'asc' },
-  });
-
-  // Fetch New Arrivals (isNewArrival = true)
-  const newArrivalsData = await prisma.product.findMany({
-    where: { isNewArrival: true },
-    take: 4,
-    orderBy: { createdAt: 'desc' },
-    include: {
-      category: true,
-      images: { orderBy: { order: 'asc' } },
-      variants: true,
-      reviews: { select: { rating: true } },
-    },
-  });
-
-  // Fetch Best Sellers (isBestSeller = true)
-  const bestSellersData = await prisma.product.findMany({
-    where: { isBestSeller: true },
-    take: 4,
-    orderBy: { createdAt: 'desc' },
-    include: {
-      category: true,
-      images: { orderBy: { order: 'asc' } },
-      variants: true,
-      reviews: { select: { rating: true } },
-    },
-  });
-
-  const formatProduct = (p: any) => ({
-    ...p,
-    avgRating:
-      p.reviews.length > 0
-        ? Math.round((p.reviews.reduce((acc: number, r: any) => acc + r.rating, 0) / p.reviews.length) * 10) / 10
-        : undefined,
-    reviewCount: p.reviews.length,
-  });
-
-  const newArrivals = newArrivalsData.map(formatProduct);
-  const bestSellers = bestSellersData.map(formatProduct);
+  const [categoriesRes, newArrivalsRes, bestSellersRes] = await Promise.all([
+    serverApiFetch('/categories'),
+    serverApiFetch('/products?isNewArrival=true&sort=newest'),
+    serverApiFetch('/products?isBestSeller=true&sort=newest'),
+  ]);
+  const categoriesData = await categoriesRes.json();
+  const newArrivalsData = await newArrivalsRes.json();
+  const bestSellersData = await bestSellersRes.json();
+  const categories: Category[] = (categoriesData.categories || []).slice(0, 8);
+  const newArrivals: Product[] = (newArrivalsData.products || []).slice(0, 4);
+  const bestSellers: Product[] = (bestSellersData.products || []).slice(0, 4);
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-16 space-y-16">
@@ -90,7 +60,7 @@ export default async function HomePage() {
               className="group relative aspect-[4/5] overflow-hidden rounded-2xl bg-gray-100 border border-gray-100 shadow-sm hover:shadow-lg transition-all"
             >
               <Image
-                src={cat.image || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=800&auto=format&fit=crop'}
+                src={getImageUrl(cat.image || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=800&auto=format&fit=crop')}
                 alt={cat.name}
                 fill
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"

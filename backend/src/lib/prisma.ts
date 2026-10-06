@@ -5,7 +5,7 @@ const configuredDatabaseUrl = process.env.DATABASE_URL;
 const databaseUrl = configuredDatabaseUrl?.startsWith('file:')
   ? path.isAbsolute(configuredDatabaseUrl.slice(5))
     ? configuredDatabaseUrl
-    : `file:${path.resolve(__dirname, '../../../frontend/prisma/dev.db')}`
+    : `file:${path.resolve(process.cwd(), configuredDatabaseUrl.slice(5))}`
   : configuredDatabaseUrl;
 
 export const prisma = new PrismaClient({

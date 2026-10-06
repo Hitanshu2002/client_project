@@ -5,12 +5,14 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import { apiFetch } from '@/lib/api';
-import { AlertCircle, CheckCircle2, ShieldCheck, Mail, KeyRound } from 'lucide-react';
+import { ForgotPasswordForm } from '@/components/auth/ForgotPasswordForm';
+import { AlertCircle, CheckCircle2, Mail, KeyRound } from 'lucide-react';
 
 export default function CustomerLoginPage() {
   const router = useRouter();
   const { login, register } = useAuth();
   const [isLoginTab, setIsLoginTab] = useState(true);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
 
   // Login & Registration State
   const [name, setName] = useState('');
@@ -25,23 +27,6 @@ export default function CustomerLoginPage() {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Quick Demo Credentials Fillers
-  const fillDemoAdmin = () => {
-    setIsLoginTab(true);
-    setEmail('admin@ramyaa.com');
-    setPassword('admin123');
-    setErrorMsg('');
-    setSuccessMsg('Loaded Demo Admin Credentials');
-  };
-
-  const fillDemoCustomer = () => {
-    setIsLoginTab(true);
-    setEmail('customer@ramyaa.com');
-    setPassword('customer123');
-    setErrorMsg('');
-    setSuccessMsg('Loaded Demo Customer Credentials');
-  };
 
   // Step 1: Send OTP to Email
   const handleSendOtp = async () => {
@@ -97,7 +82,7 @@ export default function CustomerLoginPage() {
       // If OTP valid, complete registration
       const res = await register(name, email, password, phone);
       if (res.success) {
-        router.push('/account');
+        router.push('/');
       } else {
         setErrorMsg(res.error || 'Registration failed');
       }
@@ -116,16 +101,29 @@ export default function CustomerLoginPage() {
 
     const res = await login(email, password);
     if (res.success) {
-      if (email.toLowerCase().includes('admin')) {
-        router.push('/admin');
-      } else {
-        router.push('/account');
-      }
+      router.push('/');
     } else {
       setErrorMsg(res.error || 'Login failed');
     }
     setIsSubmitting(false);
   };
+
+  if (isForgotPassword) {
+    return (
+      <div className="mx-auto max-w-md px-4 py-12">
+        <div className="rounded-3xl border border-gray-100 bg-white p-8 shadow-xl">
+          <ForgotPasswordForm
+            onBack={() => setIsForgotPassword(false)}
+            onSuccess={() => {
+              setIsForgotPassword(false);
+              setIsLoginTab(true);
+              setSuccessMsg('Password changed successfully. Please sign in.');
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-md px-4 py-12">
@@ -189,7 +187,7 @@ export default function CustomerLoginPage() {
 
         {/* ── Login Form ── */}
         {isLoginTab ? (
-          <form onSubmit={handleLoginSubmit} className="space-y-4">
+          <form onSubmit={handleLoginSubmit} autoComplete="off" className="space-y-4">
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-1">Email Address *</label>
               <input
@@ -197,6 +195,7 @@ export default function CustomerLoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                autoComplete="off"
                 placeholder="you@example.com"
                 className="w-full rounded-xl border border-gray-200 p-3 text-xs focus:outline-none focus:ring-2 focus:ring-ramyaa-pink"
               />
@@ -209,6 +208,7 @@ export default function CustomerLoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autoComplete="new-password"
                 placeholder="••••••••"
                 className="w-full rounded-xl border border-gray-200 p-3 text-xs focus:outline-none focus:ring-2 focus:ring-ramyaa-pink"
               />
@@ -221,10 +221,13 @@ export default function CustomerLoginPage() {
             >
               {isSubmitting ? 'Authenticating...' : 'Sign In to Account'}
             </button>
+            <button type="button" onClick={() => setIsForgotPassword(true)} className="w-full text-xs font-semibold text-ramyaa-pink hover:underline">
+              Forgot password?
+            </button>
           </form>
         ) : (
           /* ── Registration Form with 2-Step OTP ── */
-          <form onSubmit={handleRegisterWithOtp} className="space-y-4">
+          <form onSubmit={handleRegisterWithOtp} autoComplete="off" className="space-y-4">
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-1">Full Name *</label>
               <input
@@ -246,6 +249,7 @@ export default function CustomerLoginPage() {
                 disabled={otpSent}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                autoComplete="off"
                 placeholder="you@example.com"
                 className="w-full rounded-xl border border-gray-200 p-3 text-xs focus:outline-none focus:ring-2 focus:ring-ramyaa-pink disabled:bg-gray-50"
               />
@@ -259,6 +263,7 @@ export default function CustomerLoginPage() {
                 disabled={otpSent}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autoComplete="new-password"
                 placeholder="Min 6 characters"
                 className="w-full rounded-xl border border-gray-200 p-3 text-xs focus:outline-none focus:ring-2 focus:ring-ramyaa-pink disabled:bg-gray-50"
               />
@@ -326,30 +331,6 @@ export default function CustomerLoginPage() {
           </form>
         )}
 
-        {/* ── Quick Demo Credentials Buttons ── */}
-        <div className="pt-4 border-t border-gray-100 space-y-2">
-          <span className="text-[10px] font-bold text-gray-400 uppercase block text-center">
-            ⚡ Quick Test Credentials (Instant Login)
-          </span>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={fillDemoAdmin}
-              className="flex items-center justify-center space-x-1 p-2.5 rounded-xl bg-ramyaa-pink/10 border border-ramyaa-pink/20 text-ramyaa-pink text-[11px] font-bold hover:bg-ramyaa-pink/20 transition-all"
-            >
-              <ShieldCheck className="h-3.5 w-3.5" />
-              <span>Demo Admin</span>
-            </button>
-            <button
-              type="button"
-              onClick={fillDemoCustomer}
-              className="flex items-center justify-center space-x-1 p-2.5 rounded-xl bg-ramyaa-blue/10 border border-ramyaa-blue/20 text-ramyaa-blue text-[11px] font-bold hover:bg-ramyaa-blue/20 transition-all"
-            >
-              <Mail className="h-3.5 w-3.5" />
-              <span>Demo Customer</span>
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
-// Keep browser requests on the same origin by default. This prevents the UI and
-// the Next API routes from accidentally using different databases in local dev.
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
+// The browser talks directly to the Express service. Set NEXT_PUBLIC_API_URL
+// to the public backend URL in each environment.
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 /**
  * Normalizes image URLs. If path is a relative backend path (e.g. starting with /uploads or uploads/),
